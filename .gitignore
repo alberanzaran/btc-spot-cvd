@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+.DS_Store
+.idea/
+.vscode/
+work/
+public/
+!.github/
