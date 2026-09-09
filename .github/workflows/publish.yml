@@ -1,0 +1,45 @@
+name: Update BTC Spot CVD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "43 7 * * *"
+      timezone: "Europe/Madrid"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: btc-cvd-pages
+  cancel-in-progress: false
+
+jobs:
+  test-generate-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run offline tests
+        run: python -m unittest -v
+      - name: Generate and validate JSON
+        run: python publish.py --output public/btc_cvd.json --max-seconds 45
+      - name: Add static hosting controls
+        run: touch public/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+          retention-days: 1
+      - name: Deploy only the validated artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
